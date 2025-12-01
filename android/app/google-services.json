@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "873207139041",
+    "project_id": "amber-app-99014",
+    "storage_bucket": "amber-app-99014.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:873207139041:android:f126683290d3c83987c5a0",
+        "android_client_info": {
+          "package_name": "com.example.amber_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCzURX9noMKMTWDyocWe8UEyn2wG0LtJ2I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
