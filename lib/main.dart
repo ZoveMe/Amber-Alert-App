@@ -14,11 +14,10 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   debugPrint('🔔 Background message received: ${message.messageId}');
 }
 
-
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase with platform-specific options
+  // Initialize Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -26,7 +25,7 @@ Future<void> main() async {
   // Register background message handler
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-  // Initialize Hive and open the local cache
+  // Initialize Hive
   await Hive.initFlutter();
   await Hive.openBox('alertsCache');
 
@@ -43,11 +42,13 @@ class AmberApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF570F0F), // amber/orange
+          seedColor: Color(0xFF570F0F),
           brightness: Brightness.light,
         ),
         useMaterial3: true,
       ),
+
+      // THIS IS THE FIX:
       home: const HomeScreen(),
     );
   }

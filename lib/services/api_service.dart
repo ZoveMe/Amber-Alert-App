@@ -34,7 +34,7 @@ class ApiService {
     return [
       Alert(
         alertId: "ALR-2025-001",
-        region: "central",
+        region: "skopje",
         city: "Skopje",
         lat: 41.9965,
         lng: 21.4314,
@@ -44,7 +44,7 @@ class ApiService {
       ),
       Alert(
         alertId: "ALR-2025-002",
-        region: "south",
+        region: "pelagonia",
         city: "Bitola",
         lat: 41.0328,
         lng: 21.3403,
@@ -54,7 +54,7 @@ class ApiService {
       ),
       Alert(
         alertId: "ALR-2025-003",
-        region: "north",
+        region: "polog",
         city: "Tetovo",
         lat: 42.0086,
         lng: 20.9716,
@@ -64,7 +64,7 @@ class ApiService {
       ),
       Alert(
         alertId: "ALR-2025-004",
-        region: "west",
+        region: "southwest",
         city: "Ohrid",
         lat: 41.1172,
         lng: 20.8016,
@@ -74,6 +74,7 @@ class ApiService {
       ),
     ];
   }
+
 
   static Future<List<Alert>> _loadFromCacheOrSample() async {
     final box = Hive.box('alertsCache');

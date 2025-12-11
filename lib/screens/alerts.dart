@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/alert.dart';
+import '../models/mk_regions.dart';
+
 
 class AlertsScreen extends StatelessWidget {
   final List<Alert> alerts;
@@ -53,7 +55,7 @@ class AlertsScreen extends StatelessWidget {
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             subtitle: Text(
-              '${alert.city} • ${alert.region.toUpperCase()}\n$time',
+              '${alert.city} • ${MkRegions.displayName(alert.region)}\n$time',
             ),
             isThreeLine: true,
             trailing: Container(

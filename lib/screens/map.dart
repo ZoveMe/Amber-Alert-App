@@ -1,8 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:flutter_map_geojson/flutter_map_geojson.dart';
 import 'package:latlong2/latlong.dart';
 import '../models/alert.dart';
+import '../models/mk_regions.dart';
+import 'dart:math';
 
 class MapScreen extends StatefulWidget {
   final List<Alert> alerts;
@@ -14,112 +16,199 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   final MapController _mapController = MapController();
-  final GeoJsonParser _geoJsonParser = GeoJsonParser();
+
+  List<Polygon> _regionPolygons = [];
+  List<Marker> _regionCenters = []; // person icons
+  List<String> _regionNames = [];
+
   bool _loading = true;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _loadBorder();
+    _loadRegions();
   }
 
-  Future<void> _loadBorder() async {
-    final data = await DefaultAssetBundle.of(context)
-        .loadString('assets/macedonia_border.geojson');
-    _geoJsonParser.parseGeoJsonAsString(data);
-    setState(() => _loading = false);
+  /// Load GeoJSON → create polygons + centroid markers
+  Future<void> _loadRegions() async {
+    final jsonString = await DefaultAssetBundle.of(context)
+        .loadString('assets/macedonia_regions.geojson');
+
+    final map = jsonDecode(jsonString);
+    final features = map["features"] as List;
+
+    List<Polygon> polygons = [];
+    List<Marker> centers = [];
+    List<String> names = [];
+
+    for (final feature in features) {
+      final props = feature["properties"];
+      final name = props?["name"] ?? "Unknown Region";
+      names.add(name);
+
+      final geometry = feature["geometry"];
+      final coords = geometry["coordinates"][0] as List;
+
+      // Convert to LatLng points
+      final points = coords
+          .map((c) => LatLng(
+        (c[1] as num).toDouble(),
+        (c[0] as num).toDouble(),
+      ))
+          .toList();
+
+      polygons.add(
+        Polygon(
+          points: points,
+          borderColor: Colors.orangeAccent,
+          borderStrokeWidth: 2,
+          color: const Color(0xFFFFB300).withOpacity(0.25),
+        ),
+      );
+
+      // --- Calculate centroid ---
+      double lat = 0, lng = 0;
+      for (final p in points) {
+        lat += p.latitude;
+        lng += p.longitude;
+      }
+      lat /= points.length;
+      lng /= points.length;
+
+      // Region center marker (person icon)
+      centers.add(
+        Marker(
+          width: 45,
+          height: 45,
+          point: LatLng(lat, lng),
+          child: GestureDetector(
+            onTap: () => _showRegionAlerts(name),
+            child: const Icon(
+              Icons.person_pin_circle,
+              size: 40,
+              color: Colors.blueAccent,
+            ),
+          ),
+        ),
+      );
+    }
+
+    setState(() {
+      _regionPolygons = polygons;
+      _regionCenters = centers;
+      _regionNames = names;
+      _loading = false;
+    });
   }
 
-  Color _markerColor(String priority) {
-    switch (priority.toLowerCase()) {
+  Color _priorityColor(String p) {
+    switch (p.toLowerCase()) {
       case 'high':
-        return const Color(0xFFE74C3C); // red
+        return Colors.red;
       case 'medium':
         return Colors.orange;
-      case 'low':
       default:
         return Colors.green;
     }
   }
 
-  void _zoomIn() =>
-      _mapController.move(_mapController.camera.center, _mapController.camera.zoom + 0.5);
-
-  void _zoomOut() =>
-      _mapController.move(_mapController.camera.center, _mapController.camera.zoom - 0.5);
-
   @override
   Widget build(BuildContext context) {
-    final markers = widget.alerts.map((alert) {
-      final color = _markerColor(alert.priority);
+    final alertMarkers = widget.alerts.map((alert) {
       return Marker(
-        point: LatLng(alert.lat, alert.lng),
         width: 40,
         height: 40,
+        point: LatLng(alert.lat, alert.lng),
         child: GestureDetector(
-          onTap: () => _showAlertDetails(alert, color),
-          child: Icon(Icons.location_pin, color: color, size: 36),
+          onTap: () => _showAlertDetails(alert),
+          child: Icon(
+            Icons.location_on,
+            size: 36,
+            color: _priorityColor(alert.priority),
+          ),
         ),
       );
     }).toList();
 
     return Stack(
       children: [
-        FlutterMap(
-          mapController: _mapController,
-          options: const MapOptions(
-            initialCenter: LatLng(41.6, 21.7),
-            initialZoom: 7,
-            maxZoom: 18,
-          ),
-          children: [
-            TileLayer(
-              urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-              subdomains: ['a', 'b', 'c'],
-              userAgentPackageName: 'amber.alert.macedonia',
-            ),
-            if (!_loading)
-              PolygonLayer(
-                polygons: _geoJsonParser.polygons
-                    .map((p) => Polygon(
-                  points: p.points,
-                  color: const Color(0xFFFFB300).withValues(alpha: 0.25),
-                  borderColor: Colors.orangeAccent,
-                  borderStrokeWidth: 2,
-                ))
-                    .toList(),
-              ),
-            MarkerLayer(markers: markers),
-          ],
+      FlutterMap(
+      mapController: _mapController,
+      options: const MapOptions(
+        initialCenter: LatLng(41.6, 21.7),
+        initialZoom: 7,
+        maxZoom: 18,
+      ),
+      children: [
+        // OSM background
+        TileLayer(
+          urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+          subdomains: ['a', 'b', 'c'],
         ),
-        Positioned(
-          right: 10,
-          bottom: 100,
-          child: Column(
-            children: [
-              _zoomButton(Icons.add, _zoomIn),
-              const SizedBox(height: 8),
-              _zoomButton(Icons.remove, _zoomOut),
-            ],
-          ),
-        ),
-      ]
+
+        // REMOVE POLYGONS (NO ORANGE RECTANGLES)
+
+        // Region center person icons
+        if (!_loading) MarkerLayer(markers: _regionCenters),
+
+        // Alerts (red/orange/green pins)
+        MarkerLayer(markers: alertMarkers),
+      ],
+    ),
+
+    ],
     );
   }
 
-  Widget _zoomButton(IconData icon, VoidCallback onPressed) {
-    return FloatingActionButton(
-      heroTag: icon.codePoint,
-      mini: true,
-      onPressed: onPressed,
-      backgroundColor: Colors.white,
-      child: Icon(icon, color: Colors.black87),
-    );
-  }
+  // ------------------------ UI HANDLERS -------------------------
 
-  void _showAlertDetails(Alert alert, Color color) {
+  /// Show alerts for that region
+  void _showRegionAlerts(String regionName) {
+    final normalized = MkRegions.displayName(regionName);
+
+    final regionAlerts = widget.alerts
+        .where((a) => MkRegions.displayName(a.region ?? "") == normalized)
+        .toList();
+
     showModalBottomSheet(
       context: context,
+      backgroundColor: const Color(0xFF1A1A1A),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.all(16),
+        child: regionAlerts.isEmpty
+            ? Text("No active alerts in $normalized",
+            style: const TextStyle(color: Colors.white70, fontSize: 16))
+            : Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("$normalized Region Alerts",
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            ...regionAlerts.map((a) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Text(
+                "${a.city} — ${a.description}",
+                style: const TextStyle(color: Colors.white70),
+              ),
+            )),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Show a single alert popup
+  void _showAlertDetails(Alert alert) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1A1A1A),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -129,18 +218,28 @@ class _MapScreenState extends State<MapScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('${alert.city}, ${alert.region.toUpperCase()}',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            Text(
+              "${alert.city}, ${MkRegions.displayName(alert.region ?? '')}",
+              style: const TextStyle(
+                  fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+            ),
             const SizedBox(height: 8),
-            Text(alert.description),
-            const SizedBox(height: 8),
-            Row(children: [
-              Icon(Icons.priority_high, color: color),
-              const SizedBox(width: 4),
-              Text('Priority: ${alert.priority}'),
-            ]),
-            const SizedBox(height: 4),
-            Text('Posted: ${alert.createdAt.toLocal()}'),
+            Text(alert.description,
+                style: const TextStyle(color: Colors.white70)),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Icon(Icons.priority_high, color: _priorityColor(alert.priority)),
+                const SizedBox(width: 8),
+                Text("Priority: ${alert.priority}",
+                    style: const TextStyle(color: Colors.white70)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              "Posted: ${alert.createdAt.toLocal()}",
+              style: const TextStyle(color: Colors.white38, fontSize: 12),
+            ),
           ],
         ),
       ),

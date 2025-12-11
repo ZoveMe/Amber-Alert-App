@@ -1,3 +1,4 @@
+
 class Alert {
   final String alertId;
   final String region;
