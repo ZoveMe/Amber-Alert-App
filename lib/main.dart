@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+
 import 'firebase_options.dart';
 import 'screens/home.dart';
 
-/// Handles background Firebase messages
+/// Background handler for Firebase Push Notifications
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
@@ -17,15 +18,15 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase
+  // ---- 🔥 Initialize Firebase ----
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // Register background message handler
+  // Register background push notification handler
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-  // Initialize Hive
+  // ---- 🗂 Initialize Hive local storage ----
   await Hive.initFlutter();
   await Hive.openBox('alertsCache');
 
@@ -40,15 +41,17 @@ class AmberApp extends StatelessWidget {
     return MaterialApp(
       title: 'Amber Alert Macedonia',
       debugShowCheckedModeBanner: false,
+
+      // ---- APP THEME ----
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Color(0xFF570F0F),
+          seedColor: const Color(0xFF570F0F), // deep amber/red
           brightness: Brightness.light,
         ),
         useMaterial3: true,
       ),
 
-      // THIS IS THE FIX:
+      // ---- MAIN SCREEN ----
       home: const HomeScreen(),
     );
   }

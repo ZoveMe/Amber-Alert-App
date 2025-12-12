@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import 'alerts.dart';
 import 'map.dart';
 import 'settings.dart';
+import 'add_missing_person.dart'; // <-- MAKE SURE THIS FILE EXISTS
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -27,15 +28,12 @@ class _HomeScreenState extends State<HomeScreen>
   void initState() {
     super.initState();
 
-    // Load alerts once
     _alertsFuture = ApiService.fetchAlerts();
 
-    // Navigation triggered from push notification
     FirebaseMessaging.onMessageOpenedApp.listen((_) {
       setState(() => _currentIndex = 1);
     });
 
-    // Glow animation setup
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
@@ -54,11 +52,13 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
+
     final pages = [
       _buildHomePage(),
       _buildAlertsPage(),
       _buildMapPage(),
       const SettingsScreen(),
+      const AddMissingPersonScreen(), // <-- NEW SCREEN
     ];
 
     return Scaffold(
@@ -67,7 +67,6 @@ class _HomeScreenState extends State<HomeScreen>
       appBar: AppBar(
         backgroundColor: const Color(0xFF111111),
         centerTitle: true,
-
         title: AnimatedBuilder(
           animation: _glowAnimation,
           builder: (_, __) => Text(
@@ -98,9 +97,6 @@ class _HomeScreenState extends State<HomeScreen>
 
         selectedItemColor: Colors.redAccent,
         unselectedItemColor: Colors.white70,
-
-        selectedIconTheme: const IconThemeData(size: 28),
-        unselectedIconTheme: const IconThemeData(size: 26),
 
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
@@ -159,6 +155,8 @@ class _HomeScreenState extends State<HomeScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+
+            // LOGO WITH GLOW
             AnimatedBuilder(
               animation: _glowAnimation,
               builder: (_, __) => Container(
@@ -180,10 +178,7 @@ class _HomeScreenState extends State<HomeScreen>
             const Text(
               "Real-time missing person alerts across North Macedonia.",
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 16,
-              ),
+              style: TextStyle(color: Colors.white70, fontSize: 16),
             ),
 
             const SizedBox(height: 32),
@@ -196,6 +191,7 @@ class _HomeScreenState extends State<HomeScreen>
                 _featureCard(Icons.list, "View Alerts", 1),
                 _featureCard(Icons.map, "Open Map", 2),
                 _featureCard(Icons.settings, "Settings", 3),
+                _featureCard(Icons.person_add, "Report Missing", 4),
               ],
             ),
           ],
@@ -209,7 +205,17 @@ class _HomeScreenState extends State<HomeScreen>
   // -------------------------------
   Widget _featureCard(IconData icon, String title, int index) {
     return GestureDetector(
-      onTap: () => setState(() => _currentIndex = index),
+      onTap: () {
+        if (index == 4) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const AddMissingPersonScreen()),
+          );
+        } else {
+          setState(() => _currentIndex = index);
+        }
+      },
+
       child: Container(
         width: 150,
         padding: const EdgeInsets.all(20),
@@ -223,7 +229,7 @@ class _HomeScreenState extends State<HomeScreen>
               color: Colors.redAccent.withOpacity(0.15),
               blurRadius: 10,
               offset: const Offset(0, 4),
-            )
+            ),
           ],
         ),
 
