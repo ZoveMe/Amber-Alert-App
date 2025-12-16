@@ -55,7 +55,7 @@ class AlertsScreen extends StatelessWidget {
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             subtitle: Text(
-              '${alert.city} • ${MkRegions.displayName(alert.region)}\n$time',
+              '${alert.city} • ${MkRegions.toDisplay(alert.region)}\n$time',
             ),
             isThreeLine: true,
             trailing: Container(

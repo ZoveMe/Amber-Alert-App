@@ -164,10 +164,11 @@ class _MapScreenState extends State<MapScreen> {
 
   /// Show alerts for that region
   void _showRegionAlerts(String regionName) {
-    final normalized = MkRegions.displayName(regionName);
+    final normalized = MkRegions.toDisplay(regionName);
+
 
     final regionAlerts = widget.alerts
-        .where((a) => MkRegions.displayName(a.region ?? "") == normalized)
+        .where((a) => MkRegions.toDisplay(a.region ?? "") == normalized)
         .toList();
 
     showModalBottomSheet(
@@ -219,7 +220,7 @@ class _MapScreenState extends State<MapScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "${alert.city}, ${MkRegions.displayName(alert.region ?? '')}",
+              "${alert.city}, ${MkRegions.toDisplay(alert.region ?? '')}",
               style: const TextStyle(
                   fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
             ),

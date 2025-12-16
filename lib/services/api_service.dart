@@ -4,9 +4,16 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../models/alert.dart';
 
 class ApiService {
-  // TODO: change this to your real backend URL
+  // Placeholder backend (not used yet)
   static const String baseUrl = 'https://example.com';
 
+  /// 🔴 WILL SEND TO RABBITMQ (next step)
+  static Future<void> publishAlert(Alert alert) async {
+    // For now just log – we will replace this with RabbitMQ HTTP API
+    print('Publishing alert: ${alert.toJson()}');
+  }
+
+  /// 🔵 Fetch alerts (HTTP → cache → sample)
   static Future<List<Alert>> fetchAlerts() async {
     try {
       final uri = Uri.parse('$baseUrl/api/alerts');
@@ -16,13 +23,12 @@ class ApiService {
         final List<dynamic> data = jsonDecode(response.body);
         final alerts = data.map((e) => Alert.fromJson(e)).toList();
 
-        // cache in Hive
+        // Cache in Hive
         final box = Hive.box('alertsCache');
         box.put('alerts', alerts.map((a) => a.toJson()).toList());
 
         return alerts;
       } else {
-        // fallback to cache or static
         return _loadFromCacheOrSample();
       }
     } catch (_) {
@@ -30,6 +36,7 @@ class ApiService {
     }
   }
 
+  /// 🧪 Sample data (offline fallback)
   static List<Alert> _sampleAlerts() {
     return [
       Alert(
@@ -44,7 +51,7 @@ class ApiService {
       ),
       Alert(
         alertId: "ALR-2025-002",
-        region: "pelagonia",
+        region: "pelagonija",
         city: "Bitola",
         lat: 41.0328,
         lng: 21.3403,
@@ -75,15 +82,17 @@ class ApiService {
     ];
   }
 
-
+  /// 💾 Cache fallback
   static Future<List<Alert>> _loadFromCacheOrSample() async {
     final box = Hive.box('alertsCache');
+
     if (box.containsKey('alerts')) {
       final List list = box.get('alerts');
       return list
           .map((e) => Alert.fromJson(Map<String, dynamic>.from(e)))
           .toList();
     }
+
     return _sampleAlerts();
   }
 }

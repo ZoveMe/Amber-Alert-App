@@ -1,7 +1,7 @@
 import 'package:latlong2/latlong.dart';
 
 class MkRegions {
-  /// Official region names in Macedonian
+  /// Official Macedonian region names (UI / dropdown)
   static const List<String> all = [
     "Скопски",
     "Пелагониски",
@@ -12,6 +12,18 @@ class MkRegions {
     "Источен",
     "Североисточен",
   ];
+
+  /// Canonical routing keys (Latin, lowercase, RabbitMQ-safe)
+  static const Map<String, String> routing = {
+    "Скопски": "skopje",
+    "Пелагониски": "pelagoniski",
+    "Полог": "polog",
+    "Југозападен": "southwest",
+    "Југоисточен": "southeast",
+    "Вардарски": "vardar",
+    "Источен": "east",
+    "Североисточен": "northeast",
+  };
 
   /// Region center coordinates for map markers
   static const Map<String, LatLng> centers = {
@@ -25,44 +37,28 @@ class MkRegions {
     "Североисточен": LatLng(42.15, 22.30),
   };
 
-  /// Converts API region names → Macedonian display names
-  static String displayName(String region) {
-    switch (region.toLowerCase()) {
-      case "skopje":
-      case "skopski":
-        return "Скопски";
-
-      case "pelagonija":
-      case "pelagoniski":
-        return "Пелагониски";
-
-      case "polog":
-        return "Полог";
-
-      case "jugozapaden":
-        return "Југозападен";
-
-      case "jugoistocen":
-        return "Југоисточен";
-
-      case "vardarski":
-        return "Вардарски";
-
-      case "istocen":
-      case "istočen":
-        return "Источен";
-
-      case "severoistocen":
-        return "Североисточен";
-
-      default:
-        return region;
-    }
+  /// Convert routing / API value → Macedonian display name
+  static String toDisplay(String value) {
+    return routing.entries
+        .firstWhere(
+          (e) => e.value == value.toLowerCase(),
+      orElse: () => const MapEntry("", ""),
+    )
+        .key
+        .isNotEmpty
+        ? routing.entries
+        .firstWhere((e) => e.value == value.toLowerCase())
+        .key
+        : value;
   }
 
-  /// Returns region center for map marker
-  static LatLng? getCenter(String region) {
-    final display = displayName(region);
-    return centers[display];
+  /// Get routing-safe region code (used for RabbitMQ)
+  static String toRouting(String displayName) {
+    return routing[displayName] ?? displayName.toLowerCase();
+  }
+
+  /// Get region center for map markers
+  static LatLng? getCenter(String displayName) {
+    return centers[displayName];
   }
 }
