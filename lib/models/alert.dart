@@ -1,4 +1,3 @@
-
 class Alert {
   final String alertId;
   final String region;
@@ -6,10 +5,11 @@ class Alert {
   final double lat;
   final double lng;
   final String description;
-  final String priority; // "high" | "medium" | "low"
+  /// Allowed values: "high" | "medium" | "low"
+  final String priority;
   final DateTime createdAt;
 
-  Alert({
+  const Alert({
     required this.alertId,
     required this.region,
     required this.city,
@@ -22,14 +22,14 @@ class Alert {
 
   factory Alert.fromJson(Map<String, dynamic> json) {
     return Alert(
-      alertId: json['alertId'] ?? '',
-      region: json['region'] ?? '',
-      city: json['city'] ?? '',
+      alertId: json['alertId'] as String? ?? '',
+      region: json['region'] as String? ?? '',
+      city: json['city'] as String? ?? '',
       lat: (json['lat'] as num).toDouble(),
       lng: (json['lng'] as num).toDouble(),
-      description: json['description'] ?? '',
-      priority: json['priority'] ?? 'low',
-      createdAt: DateTime.parse(json['createdAt']),
+      description: json['description'] as String? ?? '',
+      priority: (json['priority'] as String?)?.toLowerCase() ?? 'low',
+      createdAt: DateTime.parse(json['createdAt'] as String),
     );
   }
 
@@ -44,5 +44,27 @@ class Alert {
       'priority': priority,
       'createdAt': createdAt.toUtc().toIso8601String(),
     };
+  }
+
+  Alert copyWith({
+    String? alertId,
+    String? region,
+    String? city,
+    double? lat,
+    double? lng,
+    String? description,
+    String? priority,
+    DateTime? createdAt,
+  }) {
+    return Alert(
+      alertId: alertId ?? this.alertId,
+      region: region ?? this.region,
+      city: city ?? this.city,
+      lat: lat ?? this.lat,
+      lng: lng ?? this.lng,
+      description: description ?? this.description,
+      priority: priority ?? this.priority,
+      createdAt: createdAt ?? this.createdAt,
+    );
   }
 }
