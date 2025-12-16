@@ -205,34 +205,41 @@ class _HomeScreenState extends State<HomeScreen>
   // -------------------------------
   Widget _featureCard(IconData icon, String title, int index) {
     return GestureDetector(
-      onTap: () {
+      onTap: () async {
         if (index == 4) {
-          Navigator.push(
+          final newAlert = await Navigator.push<Alert>(
             context,
-            MaterialPageRoute(builder: (_) => const AddMissingPersonScreen()),
+            MaterialPageRoute(
+              builder: (_) => const AddMissingPersonScreen(),
+            ),
           );
+
+          if (newAlert != null) {
+            setState(() {
+              _alertsFuture = _alertsFuture.then(
+                    (list) => [...list, newAlert],
+              );
+            });
+          }
         } else {
           setState(() => _currentIndex = index);
         }
       },
-
       child: Container(
         width: 150,
         padding: const EdgeInsets.all(20),
-
         decoration: BoxDecoration(
           color: const Color(0xFF121212),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Colors.redAccent, width: 1.2),
-          boxShadow: [
+          boxShadow: const [
             BoxShadow(
-              color: Colors.redAccent.withOpacity(0.15),
+              color: Color.fromRGBO(255, 82, 82, 0.15),
               blurRadius: 10,
-              offset: const Offset(0, 4),
+              offset: Offset(0, 4),
             ),
           ],
         ),
-
         child: Column(
           children: [
             Icon(icon, color: Colors.redAccent, size: 32),
@@ -247,4 +254,6 @@ class _HomeScreenState extends State<HomeScreen>
       ),
     );
   }
+
+
 }

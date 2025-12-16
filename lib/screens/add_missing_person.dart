@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/mk_regions.dart';
+import '../models/alert.dart';
 
 class AddMissingPersonScreen extends StatefulWidget {
   const AddMissingPersonScreen({super.key});
@@ -13,12 +14,21 @@ class _AddMissingPersonScreenState extends State<AddMissingPersonScreen> {
 
   final TextEditingController nameController = TextEditingController();
   final TextEditingController ageController = TextEditingController();
-  final TextEditingController latController = TextEditingController();
-  final TextEditingController lngController = TextEditingController();
+
   final TextEditingController descriptionController = TextEditingController();
 
   String selectedRegion = MkRegions.all.first;
   String selectedPriority = "HIGH";
+  final Map<String, Offset> regionCenters = {
+    "Скопски": const Offset(41.9981, 21.4254),
+    "Пелагониски": const Offset(41.0300, 21.3400),
+    "Полог": const Offset(41.8000, 20.9000),
+    "Југозападен": const Offset(41.2000, 20.7000),
+    "Југоисточен": const Offset(41.4000, 22.6000),
+    "Вардарски": const Offset(41.6000, 21.9000),
+    "Источен": const Offset(41.9000, 22.4000),
+    "Североисточен": const Offset(42.1000, 21.9000),
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -88,23 +98,7 @@ class _AddMissingPersonScreenState extends State<AddMissingPersonScreen> {
 
               const SizedBox(height: 12),
 
-              // LAT
-              TextFormField(
-                controller: latController,
-                keyboardType: TextInputType.number,
-                decoration: _field("Latitude"),
-                validator: (v) => v!.isEmpty ? "Required field" : null,
-              ),
 
-              const SizedBox(height: 12),
-
-              // LNG
-              TextFormField(
-                controller: lngController,
-                keyboardType: TextInputType.number,
-                decoration: _field("Longitude"),
-                validator: (v) => v!.isEmpty ? "Required field" : null,
-              ),
 
               const SizedBox(height: 12),
 
@@ -150,30 +144,22 @@ class _AddMissingPersonScreenState extends State<AddMissingPersonScreen> {
   void _submitForm() {
     if (!_formKey.currentState!.validate()) return;
 
-    final data = {
-      "name": nameController.text,
-      "age": int.tryParse(ageController.text) ?? 0,
-      "region": selectedRegion,
-      "priority": selectedPriority,
-      "last_known_location": {
-        "lat": double.tryParse(latController.text),
-        "lng": double.tryParse(lngController.text),
-      },
-      "description": descriptionController.text,
-      "timestamp": DateTime.now().millisecondsSinceEpoch,
-    };
+    final center = regionCenters[selectedRegion]!;
 
-    // TODO: SEND TO FIREBASE OR YOUR BACKEND
-    debugPrint("🚨 NEW ALERT REPORT:");
-    debugPrint(data.toString());
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Missing person report submitted"),
-        backgroundColor: Colors.redAccent,
-      ),
+    final alert = Alert(
+      alertId: DateTime.now().millisecondsSinceEpoch.toString(),
+      region: selectedRegion,
+      city: nameController.text, // label shown on map
+      lat: center.dx,
+      lng: center.dy,
+      description: descriptionController.text,
+      priority: selectedPriority.toLowerCase(), // high | medium | low
+      createdAt: DateTime.now(),
     );
 
-    Navigator.pop(context);
+    Navigator.pop(context, alert);
   }
+
+
+
 }
