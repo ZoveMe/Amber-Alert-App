@@ -3,7 +3,9 @@ import '../models/mk_regions.dart';
 import '../models/alert.dart';
 
 class AddMissingPersonScreen extends StatefulWidget {
-  const AddMissingPersonScreen({super.key});
+  final Function(Alert)? onAlertSubmitted; // Koristam callbeck zaso pri swipe kako strana mora da se zacuva alertot,a pri klik na feature card vidov deka koristis Navtigator.push async za zacuvuvanje na alertot
+
+  const AddMissingPersonScreen({super.key, this.onAlertSubmitted});
 
   @override
   State<AddMissingPersonScreen> createState() => _AddMissingPersonScreenState();
@@ -50,6 +52,7 @@ class _AddMissingPersonScreenState extends State<AddMissingPersonScreen> {
               // NAME
               TextFormField(
                 controller: nameController,
+                style: const TextStyle(color: Colors.white),
                 decoration: _field("Full name"),
                 validator: (v) => v!.isEmpty ? "Required field" : null,
               ),
@@ -60,6 +63,7 @@ class _AddMissingPersonScreenState extends State<AddMissingPersonScreen> {
               TextFormField(
                 controller: ageController,
                 keyboardType: TextInputType.number,
+                style: const TextStyle(color: Colors.white),
                 decoration: _field("Age"),
                 validator: (v) => v!.isEmpty ? "Required field" : null,
               ),
@@ -105,6 +109,7 @@ class _AddMissingPersonScreenState extends State<AddMissingPersonScreen> {
               TextFormField(
                 controller: descriptionController,
                 maxLines: 3,
+                style: const TextStyle(color: Colors.white),
                 decoration: _field("Description"),
               ),
 
@@ -156,6 +161,9 @@ class _AddMissingPersonScreenState extends State<AddMissingPersonScreen> {
       priority: selectedPriority.toLowerCase(), // high | medium | low
       createdAt: DateTime.now(),
     );
+    if (widget.onAlertSubmitted != null) {
+      widget.onAlertSubmitted!(alert);
+    }
 
     Navigator.pop(context, alert);
   }

@@ -58,9 +58,16 @@ class _HomeScreenState extends State<HomeScreen>
     final pages = [
       _buildHomePage(),
       _buildAlertsPage(),
-      _buildMapPage(),
+      AddMissingPersonScreen(
+        onAlertSubmitted: (newAlert) {
+          setState(() {
+            _alertsFuture = _alertsFuture.then(
+                  (list) => [...list, newAlert],
+            );
+          });
+        },
+      ),      _buildMapPage(),
       const SettingsScreen(),
-      const AddMissingPersonScreen(), // <-- NEW SCREEN
     ];
 
     return Scaffold(
@@ -96,13 +103,28 @@ class _HomeScreenState extends State<HomeScreen>
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (i)  {
-          _pageController.animateToPage(
-            i,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-          );
-      },
+          onTap: (i) async {
+            if (i == 2) {
+              final newAlert = await Navigator.push<Alert>(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const AddMissingPersonScreen(),
+                ),
+              );
+
+              if (newAlert != null) {
+                setState(() {
+                  _alertsFuture = _alertsFuture.then(
+                        (list) => [...list, newAlert],
+                  );
+                });
+              }
+            } else {
+              _pageController.jumpToPage(
+                i,
+              );
+            }
+          },
 
         backgroundColor: const Color(0xFF111111),
         type: BottomNavigationBarType.fixed,
@@ -113,6 +135,7 @@ class _HomeScreenState extends State<HomeScreen>
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           BottomNavigationBarItem(icon: Icon(Icons.list), label: "Alerts"),
+          BottomNavigationBarItem(icon: Icon(Icons.add_circle, size: 36), label: "Report",),
           BottomNavigationBarItem(icon: Icon(Icons.map), label: "Map"),
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: "Settings"),
         ],
@@ -201,9 +224,9 @@ class _HomeScreenState extends State<HomeScreen>
               alignment: WrapAlignment.center,
               children: [
                 _featureCard(Icons.list, "View Alerts", 1),
-                _featureCard(Icons.map, "Open Map", 2),
-                _featureCard(Icons.settings, "Settings", 3),
-                _featureCard(Icons.person_add, "Report Missing", 4),
+                _featureCard(Icons.person_add, "Report Missing", 2),
+                _featureCard(Icons.map, "Open Map", 3),
+                _featureCard(Icons.settings, "Settings", 4),
               ],
             ),
           ],
@@ -218,7 +241,7 @@ class _HomeScreenState extends State<HomeScreen>
   Widget _featureCard(IconData icon, String title, int index) {
     return GestureDetector(
       onTap: () async {
-        if (index == 4) {
+        if (index == 2) {
           final newAlert = await Navigator.push<Alert>(
             context,
             MaterialPageRoute(
@@ -234,7 +257,9 @@ class _HomeScreenState extends State<HomeScreen>
             });
           }
         } else {
-          setState(() => _currentIndex = index);
+          _pageController.jumpToPage(
+            index
+          );
         }
       },
       child: Container(
