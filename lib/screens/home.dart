@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
+// import 'package:firebase_messaging/firebase_messaging.dart';
 import '../models/alert.dart';
 import '../services/api_service.dart';
 import 'alerts.dart';
@@ -19,6 +19,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   int _currentIndex = 0;
   late Future<List<Alert>> _alertsFuture;
+  late PageController _pageController;
 
   // Glow animation
   late AnimationController _controller;
@@ -30,10 +31,10 @@ class _HomeScreenState extends State<HomeScreen>
 
     _alertsFuture = ApiService.fetchAlerts();
 
-    FirebaseMessaging.onMessageOpenedApp.listen((_) {
-      setState(() => _currentIndex = 1);
-    });
-
+    // FirebaseMessaging.onMessageOpenedApp.listen((_) {
+    //   setState(() => _currentIndex = 1);
+    // });
+    _pageController = PageController(initialPage: _currentIndex);
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
@@ -47,6 +48,7 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void dispose() {
     _controller.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
@@ -85,12 +87,22 @@ class _HomeScreenState extends State<HomeScreen>
           ),
         ),
       ),
-
-      body: pages[_currentIndex],
-
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: (index) {
+          setState(() => _currentIndex = index);
+        },
+        children: pages,
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (i) => setState(() => _currentIndex = i),
+        onTap: (i)  {
+          _pageController.animateToPage(
+            i,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
+      },
 
         backgroundColor: const Color(0xFF111111),
         type: BottomNavigationBarType.fixed,
