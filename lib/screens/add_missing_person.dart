@@ -177,13 +177,14 @@ class _AddMissingPersonScreenState extends State<AddMissingPersonScreen> {
     final alert = Alert(
       alertId: DateTime.now().millisecondsSinceEpoch.toString(),
       region: selectedRegion,
-      city: nameController.text,
+      name: nameController.text, // ✅
       lat: center.dx,
       lng: center.dy,
       description: descriptionController.text,
       priority: selectedPriority.toLowerCase(),
       createdAt: DateTime.now(),
     );
+
 
     final routingKey =
         'alert.${selectedPriority.toLowerCase()}.${MkRegions.toRouting(selectedRegion)}';

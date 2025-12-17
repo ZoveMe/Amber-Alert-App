@@ -195,7 +195,7 @@ class _MapScreenState extends State<MapScreen> {
             ...regionAlerts.map((a) => Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: Text(
-                "${a.city} — ${a.description}",
+                "${a.name} — ${a.description}",
                 style: const TextStyle(color: Colors.white70),
               ),
             )),
@@ -220,7 +220,7 @@ class _MapScreenState extends State<MapScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "${alert.city}, ${MkRegions.toDisplay(alert.region ?? '')}",
+              "${alert.name}, ${MkRegions.toDisplay(alert.region ?? '')}",
               style: const TextStyle(
                   fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
             ),

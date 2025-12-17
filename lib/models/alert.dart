@@ -1,7 +1,7 @@
 class Alert {
   final String alertId;
   final String region;
-  final String city;
+  final String name; // ✅ person name
   final double lat;
   final double lng;
   final String description;
@@ -12,7 +12,7 @@ class Alert {
   const Alert({
     required this.alertId,
     required this.region,
-    required this.city,
+    required this.name,
     required this.lat,
     required this.lng,
     required this.description,
@@ -24,7 +24,7 @@ class Alert {
     return Alert(
       alertId: json['alertId'] as String? ?? '',
       region: json['region'] as String? ?? '',
-      city: json['city'] as String? ?? '',
+      name: json['name'] as String? ?? '', // ✅
       lat: (json['lat'] as num).toDouble(),
       lng: (json['lng'] as num).toDouble(),
       description: json['description'] as String? ?? '',
@@ -37,7 +37,7 @@ class Alert {
     return {
       'alertId': alertId,
       'region': region,
-      'city': city,
+      'name': name, // ✅
       'lat': lat,
       'lng': lng,
       'description': description,
@@ -49,7 +49,7 @@ class Alert {
   Alert copyWith({
     String? alertId,
     String? region,
-    String? city,
+    String? name,
     double? lat,
     double? lng,
     String? description,
@@ -59,7 +59,7 @@ class Alert {
     return Alert(
       alertId: alertId ?? this.alertId,
       region: region ?? this.region,
-      city: city ?? this.city,
+      name: name ?? this.name,
       lat: lat ?? this.lat,
       lng: lng ?? this.lng,
       description: description ?? this.description,
