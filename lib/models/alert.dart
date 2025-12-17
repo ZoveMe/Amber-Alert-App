@@ -5,7 +5,7 @@ class Alert {
   final double lat;
   final double lng;
   final String description;
-  /// Allowed values: "high" | "medium" | "low"
+
   final String priority;
   final DateTime createdAt;
 

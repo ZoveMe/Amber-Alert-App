@@ -12,7 +12,7 @@ class AlertsScreen extends StatelessWidget {
   Color _priorityColor(String priority) {
     switch (priority.toLowerCase()) {
       case 'high':
-        return const Color(0xFFE74C3C); // red
+        return const Color(0xFFE74C3C);
       case 'medium':
         return Colors.orange;
       case 'low':

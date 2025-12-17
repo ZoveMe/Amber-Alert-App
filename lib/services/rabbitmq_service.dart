@@ -3,15 +3,11 @@ import 'package:http/http.dart' as http;
 import '../models/alert.dart';
 
 class RabbitMQService {
-  // 🔁 CHANGE HOST BASED ON DEVICE
-  // Android Emulator: 10.0.2.2
-  // Physical phone:   YOUR_PC_IP (e.g. 192.168.1.50)
+
   static const String _host = '10.0.2.2';
 
   static const String _username = 'guest';
   static const String _password = 'guest';
-
-  /// Publish to YOUR exchange
   static const String _exchange = 'alerts.topic';
 
   static Future<void> publishAlert(

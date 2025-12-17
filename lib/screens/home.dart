@@ -5,7 +5,7 @@ import '../services/api_service.dart';
 import 'alerts.dart';
 import 'map.dart';
 import 'settings.dart';
-import 'add_missing_person.dart'; // <-- MAKE SURE THIS FILE EXISTS
+import 'add_missing_person.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -58,7 +58,7 @@ class _HomeScreenState extends State<HomeScreen>
       _buildAlertsPage(),
       _buildMapPage(),
       const SettingsScreen(),
-      const AddMissingPersonScreen(), // <-- NEW SCREEN
+      const AddMissingPersonScreen(),
     ];
 
     return Scaffold(

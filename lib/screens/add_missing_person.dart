@@ -24,7 +24,7 @@ class _AddMissingPersonScreenState extends State<AddMissingPersonScreen> {
   String selectedRegion = MkRegions.all.first;
   String selectedPriority = 'HIGH';
 
-  /// 🔁 Region → map center
+
   final Map<String, Offset> regionCenters = {
     'Скопски': Offset(41.9981, 21.4254),
     'Пелагониски': Offset(41.0300, 21.3400),
@@ -36,7 +36,7 @@ class _AddMissingPersonScreenState extends State<AddMissingPersonScreen> {
     'Североисточен': Offset(42.1000, 21.9000),
   };
 
-  /// 🧠 Converts UI region to routing-safe value
+
   String normalizeRegion(String region) {
     return region
         .toLowerCase()
