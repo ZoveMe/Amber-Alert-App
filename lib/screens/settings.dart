@@ -47,20 +47,54 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return ListView(
       children: [
         SwitchListTile(
-          title: const Text('Push Notifications'),
-          subtitle: const Text('Receive Amber Alert push notifications'),
+          title: const Text('Push Notifications',style: TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),),
+          subtitle: const Text('Receive Amber Alert push notifications',style: TextStyle(
+            color: Colors.white70,
+            fontSize: 14,
+          ),),
           value: _pushEnabled,
           onChanged: _setPush,
+          activeColor: Colors.redAccent,
+          tileColor: const Color(0xFF121212),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: const BorderSide(color: Colors.white12),
+          ),
         ),
         SwitchListTile(
-          title: const Text('Location-based Alerts (30 km)'),
-          subtitle: const Text('Notify only for alerts near your location'),
+          title: const Text('Location-based Alerts (30 km)',   style: TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),),
+          subtitle: const Text('Notify only for alerts near your location',  style: TextStyle(
+            color: Colors.white70,
+            fontSize: 14,
+          ),),
           value: _geoEnabled,
           onChanged: _setGeo,
+          activeColor: Colors.redAccent,
+          tileColor: const Color(0xFF121212),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: const BorderSide(color: Colors.white12),
+          ),
         ),
-        const ListTile(
-          title: Text('App Version'),
-          subtitle: Text('1.0.0'),
+        ListTile(
+          title: const Text('App Version',style: TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),),
+          subtitle: const Text('1.0.0',style: TextStyle(
+            color: Colors.white70,
+            fontSize: 14,
+          ),),
+
         ),
       ],
     );

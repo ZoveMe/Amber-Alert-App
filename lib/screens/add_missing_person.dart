@@ -4,7 +4,10 @@ import '../models/alert.dart';
 import '../services/rabbitmq_service.dart';
 
 class AddMissingPersonScreen extends StatefulWidget {
-  const AddMissingPersonScreen({super.key});
+
+  final Function(Alert)? onAlertSubmitted; // Koristam callbeck zaso pri swipe kako strana mora da se zacuva alertot,a pri klik na feature card vidov deka koristis Navtigator.push async za zacuvuvanje na alertot
+
+  const AddMissingPersonScreen({super.key, this.onAlertSubmitted});
 
   @override
   State<AddMissingPersonScreen> createState() =>
@@ -59,6 +62,7 @@ class _AddMissingPersonScreenState extends State<AddMissingPersonScreen> {
             children: [
               _textField(
                 controller: nameController,
+                style:const TextStyle(color: Colors.white),
                 label: 'Full name',
                 required: true,
               ),
@@ -68,6 +72,7 @@ class _AddMissingPersonScreenState extends State<AddMissingPersonScreen> {
                 controller: ageController,
                 label: 'Age',
                 keyboardType: TextInputType.number,
+                style:const TextStyle(color: Colors.white),
                 required: true,
               ),
               const SizedBox(height: 12),
@@ -81,6 +86,7 @@ class _AddMissingPersonScreenState extends State<AddMissingPersonScreen> {
               _textField(
                 controller: descriptionController,
                 label: 'Description',
+                style:const TextStyle(color: Colors.white),
                 maxLines: 3,
               ),
               const SizedBox(height: 20),
@@ -108,15 +114,20 @@ class _AddMissingPersonScreenState extends State<AddMissingPersonScreen> {
     TextInputType? keyboardType,
     bool required = false,
     int maxLines = 1,
+    TextStyle? style, // ✅ ADD THIS
   }) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
       maxLines: maxLines,
+      style: style ?? const TextStyle(color: Colors.white), // ✅ USE IT
       validator: required ? (v) => v!.isEmpty ? 'Required field' : null : null,
       decoration: _fieldDecoration(label),
     );
   }
+
+
+
 
   Widget _regionDropdown() {
     return DropdownButtonFormField<String>(
@@ -184,7 +195,9 @@ class _AddMissingPersonScreenState extends State<AddMissingPersonScreen> {
       priority: selectedPriority.toLowerCase(),
       createdAt: DateTime.now(),
     );
-
+    if (widget.onAlertSubmitted != null) {
+      widget.onAlertSubmitted!(alert);
+    }
 
     final routingKey =
         'alert.${selectedPriority.toLowerCase()}.${MkRegions.toRouting(selectedRegion)}';
