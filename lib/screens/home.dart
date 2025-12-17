@@ -59,8 +59,6 @@ class _HomeScreenState extends State<HomeScreen>
     final pages = [
       _buildHomePage(),
       _buildAlertsPage(),
-      _buildMapPage(),
-      const SettingsScreen(),
       AddMissingPersonScreen(
         onAlertSubmitted: (newAlert) {
           setState(() {
@@ -69,7 +67,9 @@ class _HomeScreenState extends State<HomeScreen>
             );
           });
         },
-      ),      _buildMapPage()
+      ),      _buildMapPage(),
+
+      const SettingsScreen(),
     ];
 
     return Scaffold(
