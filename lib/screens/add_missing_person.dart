@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
-import '../models/mk_regions.dart';
+
 import '../models/alert.dart';
+import '../models/mk_regions.dart';
 import '../services/rabbitmq_service.dart';
 
 class AddMissingPersonScreen extends StatefulWidget {
+  final Function(Alert)? onAlertSubmitted;
 
-  final Function(Alert)? onAlertSubmitted; // Koristam callbeck zaso pri swipe kako strana mora da se zacuva alertot,a pri klik na feature card vidov deka koristis Navtigator.push async za zacuvuvanje na alertot
-
-  const AddMissingPersonScreen({super.key, this.onAlertSubmitted});
+  const AddMissingPersonScreen({
+    super.key,
+    this.onAlertSubmitted,
+  });
 
   @override
   State<AddMissingPersonScreen> createState() =>
@@ -17,33 +20,24 @@ class AddMissingPersonScreen extends StatefulWidget {
 class _AddMissingPersonScreenState extends State<AddMissingPersonScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController ageController = TextEditingController();
-  final TextEditingController descriptionController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _ageController = TextEditingController();
+  final _descriptionController = TextEditingController();
 
-  String selectedRegion = MkRegions.all.first;
-  String selectedPriority = 'HIGH';
+  String _selectedRegion = MkRegions.all.first;
+  String _selectedPriority = 'HIGH';
 
-
-  final Map<String, Offset> regionCenters = {
-    'Скопски': Offset(41.9981, 21.4254),
-    'Пелагониски': Offset(41.0300, 21.3400),
-    'Полог': Offset(41.8000, 20.9000),
-    'Југозападен': Offset(41.2000, 20.7000),
-    'Југоисточен': Offset(41.4000, 22.6000),
-    'Вардарски': Offset(41.6000, 21.9000),
-    'Источен': Offset(41.9000, 22.4000),
-    'Североисточен': Offset(42.1000, 21.9000),
+  /// Approximate region centers (lat, lng)
+  final Map<String, Offset> _regionCenters = {
+    'Скопски': const Offset(41.9981, 21.4254),
+    'Пелагониски': const Offset(41.0300, 21.3400),
+    'Полог': const Offset(41.8000, 20.9000),
+    'Југозападен': const Offset(41.2000, 20.7000),
+    'Југоисточен': const Offset(41.4000, 22.6000),
+    'Вардарски': const Offset(41.6000, 21.9000),
+    'Источен': const Offset(41.9000, 22.4000),
+    'Североисточен': const Offset(42.1000, 21.9000),
   };
-
-
-  String normalizeRegion(String region) {
-    return region
-        .toLowerCase()
-        .replaceAll(' ', '')
-        .replaceAll('ски', '')
-        .replaceAll('ен', '');
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,18 +55,16 @@ class _AddMissingPersonScreenState extends State<AddMissingPersonScreen> {
           child: ListView(
             children: [
               _textField(
-                controller: nameController,
-                style:const TextStyle(color: Colors.white),
+                controller: _nameController,
                 label: 'Full name',
                 required: true,
               ),
               const SizedBox(height: 12),
 
               _textField(
-                controller: ageController,
+                controller: _ageController,
                 label: 'Age',
                 keyboardType: TextInputType.number,
-                style:const TextStyle(color: Colors.white),
                 required: true,
               ),
               const SizedBox(height: 12),
@@ -84,9 +76,8 @@ class _AddMissingPersonScreenState extends State<AddMissingPersonScreen> {
               const SizedBox(height: 12),
 
               _textField(
-                controller: descriptionController,
+                controller: _descriptionController,
                 label: 'Description',
-                style:const TextStyle(color: Colors.white),
                 maxLines: 3,
               ),
               const SizedBox(height: 20),
@@ -106,7 +97,9 @@ class _AddMissingPersonScreenState extends State<AddMissingPersonScreen> {
     );
   }
 
-  // ---------------- UI HELPERS ----------------
+  // ---------------------------------------------------------------------------
+  // UI helpers
+  // ---------------------------------------------------------------------------
 
   Widget _textField({
     required TextEditingController controller,
@@ -114,56 +107,60 @@ class _AddMissingPersonScreenState extends State<AddMissingPersonScreen> {
     TextInputType? keyboardType,
     bool required = false,
     int maxLines = 1,
-    TextStyle? style, // ✅ ADD THIS
   }) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
       maxLines: maxLines,
-      style: style ?? const TextStyle(color: Colors.white), // ✅ USE IT
-      validator: required ? (v) => v!.isEmpty ? 'Required field' : null : null,
-      decoration: _fieldDecoration(label),
+      style: const TextStyle(color: Colors.white),
+      validator: required
+          ? (v) => v == null || v.isEmpty ? 'Required field' : null
+          : null,
+      decoration: _inputDecoration(label),
     );
   }
 
-
-
-
   Widget _regionDropdown() {
     return DropdownButtonFormField<String>(
+      value: _selectedRegion,
       dropdownColor: Colors.black87,
-      value: selectedRegion,
-      decoration: _fieldDecoration('Region'),
+      decoration: _inputDecoration('Region'),
       items: MkRegions.all
           .map(
-            (r) => DropdownMenuItem(
-          value: r,
-          child: Text(r, style: const TextStyle(color: Colors.white)),
+            (region) => DropdownMenuItem(
+          value: region,
+          child: Text(
+            region,
+            style: const TextStyle(color: Colors.white),
+          ),
         ),
       )
           .toList(),
-      onChanged: (v) => setState(() => selectedRegion = v!),
+      onChanged: (v) => setState(() => _selectedRegion = v!),
     );
   }
 
   Widget _priorityDropdown() {
     return DropdownButtonFormField<String>(
+      value: _selectedPriority,
       dropdownColor: Colors.black87,
-      value: selectedPriority,
-      decoration: _fieldDecoration('Priority'),
+      decoration: _inputDecoration('Priority'),
       items: const ['HIGH', 'MEDIUM', 'LOW']
           .map(
             (p) => DropdownMenuItem(
           value: p,
-          child: Text(p, style: const TextStyle(color: Colors.white)),
+          child: Text(
+            p,
+            style: const TextStyle(color: Colors.white),
+          ),
         ),
       )
           .toList(),
-      onChanged: (v) => setState(() => selectedPriority = v!),
+      onChanged: (v) => setState(() => _selectedPriority = v!),
     );
   }
 
-  InputDecoration _fieldDecoration(String label) {
+  InputDecoration _inputDecoration(String label) {
     return InputDecoration(
       labelText: label,
       labelStyle: const TextStyle(color: Colors.white70),
@@ -178,32 +175,30 @@ class _AddMissingPersonScreenState extends State<AddMissingPersonScreen> {
     );
   }
 
-  // ---------------- SUBMIT ----------------
+  // ---------------------------------------------------------------------------
+  // Submit logic → RabbitMQ → Firebase → Notification
+  // ---------------------------------------------------------------------------
 
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final center = regionCenters[selectedRegion]!;
+    final center = _regionCenters[_selectedRegion]!;
 
     final alert = Alert(
       alertId: DateTime.now().millisecondsSinceEpoch.toString(),
-      region: selectedRegion,
-      name: nameController.text, // ✅
+      name: _nameController.text,
+      region: _selectedRegion,
       lat: center.dx,
       lng: center.dy,
-      description: descriptionController.text,
-      priority: selectedPriority.toLowerCase(),
+      description: _descriptionController.text,
+      priority: _selectedPriority.toLowerCase(),
       createdAt: DateTime.now(),
     );
-    if (widget.onAlertSubmitted != null) {
-      widget.onAlertSubmitted!(alert);
-    }
+
+    widget.onAlertSubmitted?.call(alert);
 
     final routingKey =
-        'alert.${selectedPriority.toLowerCase()}.${MkRegions.toRouting(selectedRegion)}';
-
-
-
+        'alert.${alert.priority}.${MkRegions.toRouting(_selectedRegion)}';
 
     try {
       await RabbitMQService.publishAlert(alert, routingKey);

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+
 import '../models/alert.dart';
 import '../services/api_service.dart';
 import 'alerts.dart';
@@ -14,6 +15,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
+
 class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
 
@@ -21,54 +23,93 @@ class _HomeScreenState extends State<HomeScreen>
   late Future<List<Alert>> _alertsFuture;
   late PageController _pageController;
 
-  // Glow animation
-  late AnimationController _controller;
+  late AnimationController _glowController;
   late Animation<double> _glowAnimation;
 
   @override
   void initState() {
     super.initState();
 
+    // 1️⃣ Initial data
     _alertsFuture = ApiService.fetchAlerts();
     _pageController = PageController(initialPage: _currentIndex);
 
-    FirebaseMessaging.onMessageOpenedApp.listen((_) {
-      setState(() => _currentIndex = 1);
+    // 2️⃣ Firebase listeners
+    _initFirebaseListeners();
+
+    // 3️⃣ Glow animation
+    _initGlowAnimation();
+  }
+
+  // ---------------- FIREBASE ----------------
+
+  void _initFirebaseListeners() {
+    // 📩 Notification arrives while app is OPEN
+    FirebaseMessaging.onMessage.listen((message) {
+      debugPrint('📩 FCM received → refreshing alerts');
+
+      setState(() {
+        _alertsFuture = ApiService.fetchAlerts();
+      });
     });
 
-    _controller = AnimationController(
+    // 👉 User taps notification
+    FirebaseMessaging.onMessageOpenedApp.listen((message) {
+      setState(() => _currentIndex = 1);
+      _pageController.jumpToPage(1);
+    });
+  }
+
+  // ---------------- ANIMATION ----------------
+
+  void _initGlowAnimation() {
+    _glowController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
 
-    _glowAnimation = Tween<double>(begin: 0.0, end: 25.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    _glowAnimation = Tween<double>(begin: 0, end: 25).animate(
+      CurvedAnimation(
+        parent: _glowController,
+        curve: Curves.easeInOut,
+      ),
     );
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _glowController.dispose();
     _pageController.dispose();
     super.dispose();
   }
 
+
+  void _navigateTo(int index) {
+    setState(() => _currentIndex = index);
+    _pageController.jumpToPage(index);
+  }
+
+  Future<void> _openAddMissing() async {
+    final newAlert = await Navigator.push<Alert>(
+      context,
+      MaterialPageRoute(builder: (_) => const AddMissingPersonScreen()),
+    );
+
+    if (newAlert != null) {
+      setState(() {
+        _alertsFuture =
+            _alertsFuture.then((list) => [...list, newAlert]);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-
     final pages = [
       _buildHomePage(),
       _buildAlertsPage(),
-      AddMissingPersonScreen(
-        onAlertSubmitted: (newAlert) {
-          setState(() {
-            _alertsFuture = _alertsFuture.then(
-                  (list) => [...list, newAlert],
-            );
-          });
-        },
-      ),      _buildMapPage(),
-
+      const SizedBox(),
+      _buildMapPage(),
       const SettingsScreen(),
     ];
 
@@ -81,11 +122,11 @@ class _HomeScreenState extends State<HomeScreen>
         title: AnimatedBuilder(
           animation: _glowAnimation,
           builder: (_, __) => Text(
-            "Amber Alert Macedonia",
+            'Amber Alert Macedonia',
             style: TextStyle(
               color: Colors.white,
-              fontWeight: FontWeight.bold,
               fontSize: 20,
+              fontWeight: FontWeight.bold,
               shadows: [
                 Shadow(
                   blurRadius: _glowAnimation.value,
@@ -96,90 +137,41 @@ class _HomeScreenState extends State<HomeScreen>
           ),
         ),
       ),
+
       body: PageView(
         controller: _pageController,
-        onPageChanged: (index) {
-          setState(() => _currentIndex = index);
-        },
+        physics: const NeverScrollableScrollPhysics(),
         children: pages,
       ),
 
-
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (i) async {
-          if (i == 2) {
-            final newAlert = await Navigator.push<Alert>(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const AddMissingPersonScreen(),
-              ),
-            );
-
-            if (newAlert != null) {
-              setState(() {
-                _alertsFuture = _alertsFuture.then(
-                      (list) => [...list, newAlert],
-                );
-              });
-            }
-          } else {
-            _pageController.jumpToPage(
-              i,
-            );
-          }
-        },
-
         backgroundColor: const Color(0xFF111111),
-        type: BottomNavigationBarType.fixed,
-
         selectedItemColor: Colors.redAccent,
         unselectedItemColor: Colors.white70,
-
+        type: BottomNavigationBarType.fixed,
+        onTap: (i) {
+          if (i == 2) {
+            _openAddMissing();
+          } else {
+            _navigateTo(i);
+          }
+        },
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(icon: Icon(Icons.list), label: "Alerts"),
-          BottomNavigationBarItem(icon: Icon(Icons.add_circle, size: 36), label: "Report",),
-          BottomNavigationBarItem(icon: Icon(Icons.map), label: "Map"),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: "Settings"),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.list), label: 'Alerts'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.add_circle, size: 36),
+            label: 'Report',
+          ),
+          BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Map'),
+          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
         ],
       ),
     );
   }
 
-  // -------------------------------
-  // ALERTS PAGE
-  // -------------------------------
-  Widget _buildAlertsPage() {
-    return FutureBuilder<List<Alert>>(
-      future: _alertsFuture,
-      builder: (_, snapshot) {
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        return AlertsScreen(alerts: snapshot.data!);
-      },
-    );
-  }
-
-  // -------------------------------
-  // MAP PAGE
-  // -------------------------------
-  Widget _buildMapPage() {
-    return FutureBuilder<List<Alert>>(
-      future: _alertsFuture,
-      builder: (_, snapshot) {
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        return MapScreen(alerts: snapshot.data!);
-      },
-    );
-  }
-
-  // -------------------------------
-  // HOME PAGE UI
-  // -------------------------------
+  // ---------------- HOME ----------------
   Widget _buildHomePage() {
     return Container(
       decoration: const BoxDecoration(
@@ -189,13 +181,11 @@ class _HomeScreenState extends State<HomeScreen>
           end: Alignment.bottomCenter,
         ),
       ),
-
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
 
-            // LOGO WITH GLOW
             AnimatedBuilder(
               animation: _glowAnimation,
               builder: (_, __) => Container(
@@ -208,14 +198,17 @@ class _HomeScreenState extends State<HomeScreen>
                     ),
                   ],
                 ),
-                child: Image.asset('assets/logo.png', width: 160),
+                child: Image.asset(
+                  'assets/logo.png',
+                  width: 160,
+                ),
               ),
             ),
 
             const SizedBox(height: 16),
 
             const Text(
-              "Real-time missing person alerts across North Macedonia.",
+              'Real-time missing person alerts across North Macedonia.',
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.white70, fontSize: 16),
             ),
@@ -227,10 +220,10 @@ class _HomeScreenState extends State<HomeScreen>
               runSpacing: 16,
               alignment: WrapAlignment.center,
               children: [
-                _featureCard(Icons.list, "View Alerts", 1),
-                _featureCard(Icons.person_add, "Report Missing", 2),
-                _featureCard(Icons.map, "Open Map", 3),
-                _featureCard(Icons.settings, "Settings", 4),
+                _featureCard(Icons.list, 'View Alerts', 1),
+                _featureCard(Icons.person_add, 'Report Missing', 2),
+                _featureCard(Icons.map, 'Open Map', 3),
+                _featureCard(Icons.settings, 'Settings', 4),
               ],
             ),
           ],
@@ -239,30 +232,13 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  // -------------------------------
-  // FEATURE CARD BUTTON
-  // -------------------------------
   Widget _featureCard(IconData icon, String title, int index) {
     return GestureDetector(
-      onTap: () async {
+      onTap: () {
         if (index == 2) {
-          final newAlert = await Navigator.push<Alert>(
-            context,
-            MaterialPageRoute(
-              builder: (_) => const AddMissingPersonScreen(),
-            ),
-          );
-
-          if (newAlert != null) {
-            setState(() {
-              _alertsFuture = _alertsFuture.then(
-                    (list) => [...list, newAlert],
-              );
-            });
-          }
+          _openAddMissing();
         } else {
-          setState(() => _currentIndex = index);
-          _pageController.jumpToPage(index);
+          _navigateTo(index);
         }
       },
       child: Container(
@@ -271,29 +247,44 @@ class _HomeScreenState extends State<HomeScreen>
         decoration: BoxDecoration(
           color: const Color(0xFF121212),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.redAccent, width: 1.2),
-          boxShadow: const [
-            BoxShadow(
-              color: Color.fromRGBO(255, 82, 82, 0.15),
-              blurRadius: 10,
-              offset: Offset(0, 4),
-            ),
-          ],
+          border: Border.all(color: Colors.redAccent),
         ),
         child: Column(
           children: [
             Icon(icon, color: Colors.redAccent, size: 32),
             const SizedBox(height: 10),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white70),
-            ),
+            Text(title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.white70)),
           ],
         ),
       ),
     );
   }
 
+  // ---------------- ALERTS ----------------
+  Widget _buildAlertsPage() {
+    return FutureBuilder<List<Alert>>(
+      future: _alertsFuture,
+      builder: (_, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        return AlertsScreen(alerts: snapshot.data!);
+      },
+    );
+  }
 
+  // ---------------- MAP ----------------
+  Widget _buildMapPage() {
+    return FutureBuilder<List<Alert>>(
+      future: _alertsFuture,
+      builder: (_, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        return MapScreen(alerts: snapshot.data!);
+      },
+    );
+  }
 }
