@@ -15,6 +15,28 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  _showLocalNotification(message);
+}
+
+/// Show a local notification for any FCM
+void _showLocalNotification(RemoteMessage message) {
+  final notification = message.notification;
+  if (notification == null) return;
+
+  flutterLocalNotificationsPlugin.show(
+    notification.hashCode,
+    notification.title ?? 'Amber Alert',
+    notification.body ?? 'Missing person alert',
+    const NotificationDetails(
+      android: AndroidNotificationDetails(
+        'amber_alerts',
+        'Amber Alerts',
+        importance: Importance.max,
+        priority: Priority.high,
+        icon: '@mipmap/ic_launcher',
+      ),
+    ),
+  );
 }
 
 /// Create Android notification channel
@@ -46,23 +68,8 @@ Future<void> _initLocalNotifications() async {
 /// Foreground notifications
 void _listenForForegroundMessages() {
   FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-    final notification = message.notification;
-    if (notification == null) return;
-
-    flutterLocalNotificationsPlugin.show(
-      notification.hashCode,
-      notification.title ?? 'Amber Alert',
-      notification.body ?? 'Missing person alert',
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'amber_alerts',
-          'Amber Alerts',
-          importance: Importance.max,
-          priority: Priority.high,
-          icon: '@mipmap/ic_launcher',
-        ),
-      ),
-    );
+    debugPrint('🔥 FCM foreground: ${message.messageId}');
+    _showLocalNotification(message);
   });
 }
 
@@ -70,11 +77,12 @@ void _listenForForegroundMessages() {
 Future<void> _initFCM() async {
   final messaging = FirebaseMessaging.instance;
 
-  await messaging.requestPermission(
+  final settings = await messaging.requestPermission(
     alert: true,
     badge: true,
     sound: true,
   );
+  debugPrint('🔔 FCM permission: ${settings.authorizationStatus}');
 
   final token = await messaging.getToken();
   debugPrint('📱 FCM TOKEN: $token');

@@ -34,6 +34,7 @@ class _HomeScreenState extends State<HomeScreen>
     _alertsFuture = ApiService.fetchAlerts();
     _pageController = PageController(initialPage: _currentIndex);
 
+
     // 2️⃣ Firebase listeners
     _initFirebaseListeners();
 
@@ -44,21 +45,34 @@ class _HomeScreenState extends State<HomeScreen>
   // ---------------- FIREBASE ----------------
 
   void _initFirebaseListeners() {
-    // 📩 Notification arrives while app is OPEN
+    // 📩 App is OPEN
     FirebaseMessaging.onMessage.listen((message) {
-      debugPrint('📩 FCM received → refreshing alerts');
+      final d = message.data;
+      if (d.isEmpty) return;
+
+      final alert = Alert(
+        alertId: d['alertId'],
+        name: d['name'],
+        region: d['region'],
+        description: d['description'],
+        priority: d['priority'],
+        lat: double.tryParse(d['lat'] ?? '') ?? 0,
+        lng: double.tryParse(d['lng'] ?? '') ?? 0,
+        createdAt: DateTime.now(),
+      );
 
       setState(() {
-        _alertsFuture = ApiService.fetchAlerts();
+        _alertsFuture = _alertsFuture.then((list) => [...list, alert]);
       });
     });
 
     // 👉 User taps notification
     FirebaseMessaging.onMessageOpenedApp.listen((message) {
-      setState(() => _currentIndex = 1);
-      _pageController.jumpToPage(1);
+      setState(() => _currentIndex = 3); // MAP TAB
+      _pageController.jumpToPage(3);
     });
   }
+
 
   // ---------------- ANIMATION ----------------
 

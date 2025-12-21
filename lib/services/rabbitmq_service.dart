@@ -3,12 +3,12 @@ import 'package:http/http.dart' as http;
 import '../models/alert.dart';
 
 class RabbitMQService {
-
   static const String _host = '10.0.2.2';
-
   static const String _username = 'guest';
   static const String _password = 'guest';
-  static const String _exchange = 'alerts.topic';
+
+  // Must match Python + consumer
+  static const String _exchange = 'alerts';
 
   static Future<void> publishAlert(
       Alert alert,
@@ -21,15 +21,16 @@ class RabbitMQService {
       "properties": {},
       "routing_key": routingKey,
       "payload": jsonEncode(alert.toJson()),
-      "payload_encoding": "string"
+      "payload_encoding": "string",
     };
+
+    print('🚀 Publishing to $_exchange with routingKey=$routingKey');
 
     final response = await http
         .post(
       Uri.parse(url),
       headers: {
-        "Authorization":
-        "Basic ${base64Encode(utf8.encode('$_username:$_password'))}",
+        "Authorization": "Basic ${base64Encode(utf8.encode('$_username:$_password'))}",
         "Content-Type": "application/json",
       },
       body: jsonEncode(payload),
