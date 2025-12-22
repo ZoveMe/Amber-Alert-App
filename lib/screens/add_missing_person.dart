@@ -180,6 +180,9 @@ class _AddMissingPersonScreenState extends State<AddMissingPersonScreen> {
   // ---------------------------------------------------------------------------
 
   Future<void> _submitForm() async {
+    print('🟡 UI selected region = "$_selectedRegion"');
+    print('🟡 Routing region = "${MkRegions.toRouting(_selectedRegion)}"');
+
     if (!_formKey.currentState!.validate()) return;
 
     final center = _regionCenters[_selectedRegion]!;
@@ -197,8 +200,9 @@ class _AddMissingPersonScreenState extends State<AddMissingPersonScreen> {
 
     widget.onAlertSubmitted?.call(alert);
 
-    final routingKey =
-        'alert.${alert.priority}.${MkRegions.toRouting(_selectedRegion)}';
+    final regionKey = MkRegions.toRouting(_selectedRegion);
+
+    final routingKey = 'alert.${alert.priority}.$regionKey';
 
     try {
       await RabbitMQService.publishAlert(alert, routingKey);
