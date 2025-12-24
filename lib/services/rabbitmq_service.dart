@@ -7,7 +7,6 @@ class RabbitMQService {
   static const String _username = 'guest';
   static const String _password = 'guest';
 
-  // Must match Python + consumer
   static const String _exchange = 'alerts.topic';
 
   static Future<void> publishAlert(
