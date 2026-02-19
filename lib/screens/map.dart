@@ -144,6 +144,8 @@ class _MapScreenState extends State<MapScreen> {
         TileLayer(
           urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
           subdomains: ['a', 'b', 'c'],
+          userAgentPackageName: 'com.amber.alert.macedonia',
+
         ),
 
         // REMOVE POLYGONS (NO ORANGE RECTANGLES)

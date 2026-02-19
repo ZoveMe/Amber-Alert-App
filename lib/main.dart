@@ -10,7 +10,7 @@ import 'screens/home.dart';
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 FlutterLocalNotificationsPlugin();
 
-/// REQUIRED – background handler
+
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
@@ -18,7 +18,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   _showLocalNotification(message);
 }
 
-/// Show a local notification for any FCM
+
 void _showLocalNotification(RemoteMessage message) {
   final notification = message.notification;
   if (notification == null) return;
