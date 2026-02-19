@@ -1,3 +1,5 @@
+import 'package:amber_app/auth/auth_wrapper.dart';
+import 'package:amber_app/auth/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -133,7 +135,7 @@ class AmberApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const HomeScreen(),
+      home: const AuthWrapper(),
     );
   }
 }
